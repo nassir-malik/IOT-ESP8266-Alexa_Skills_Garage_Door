@@ -82,7 +82,7 @@ async def ws_handler(websocket, path):
 
 
 
-port = int(os.getenv('PORT', 80))#5687
+port = int(os.getenv('PORT', 5687))#5687
 start_server = websockets.serve(ws_handler, '', port, klass=HttpWSSProtocol)
 # logger.info('Listening on port %d', port)
 
@@ -91,30 +91,3 @@ asyncio.get_event_loop().run_forever()
 
 
 
-# '''{
-#               "version": "1.0",
-#               "sessionAttributes": {},
-#               "response":
-#               {
-#                 "outputSpeech":
-#                 {
-#                   "type": "PlainText",
-#                   "text": "Hello World, from the Alexa Demo"
-#                 },
-#                 "card":
-#                 {
-#                   "type": "Simple",
-#                   "title": "Alexa Demo",
-#                   "content": "This is the Alexa demo."
-#                 },
-#                 "reprompt":
-#                 {
-#                   "outputSpeech":
-#                   {
-#                     "type": "PlainText",
-#                     "text": "Can I help you with anything else?"
-#                   }
-#                 },
-#                 "shouldEndSession": false
-#               }
-#             }'''
