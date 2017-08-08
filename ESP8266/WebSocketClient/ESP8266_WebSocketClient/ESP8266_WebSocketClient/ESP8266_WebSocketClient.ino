@@ -12,9 +12,10 @@
 
 
 // @@@@@@@@@@@@@@@ You only need to midify modify wi-fi and domain info @@@@@@@@@@@@@@@@@@@@
-const char* ssid     = "suddenlink.net-AD42"; //enter your ssid/ wi-fi(case sensitiv) router name - 2.4 Ghz only
-const char* password = "G7MBSY89C601814";     // enter ssid password (case sensitiv)
+const char* ssid     = "enter your ssid"; //enter your ssid/ wi-fi(case sensitiv) router name - 2.4 Ghz only
+const char* password = "enter ssid password";     // enter ssid password (case sensitiv)
 char host[] = "alexaskillsiot.herokuapp.com"; //enter your Heroku domain name like "espiot.herokuapp.com" 
+int sensor_distance_from_door = 5;
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //Firstly the connections of ultrasonic Sensor.Connect +5v and GND normally and trigger pin to 5 & echo pin to 4. 
 
@@ -29,7 +30,7 @@ WebSocketsClient webSocket;
 const int relayPin = 16;
 DynamicJsonBuffer jsonBuffer;
 String currState, oldState, message;
-//String jsonResponse = "{\"version\": \"1.0\",\"sessionAttributes\": {},\"response\": {\"outputSpeech\": {\"type\": \"<type>\",\"text\": \"<text>\"},\"shouldEndSession\": false}}";
+String jsonResponse = "{\"version\": \"1.0\",\"sessionAttributes\": {},\"response\": {\"outputSpeech\": {\"type\": \"PlainText\",\"text\": \"<text>\"},\"shouldEndSession\": false}}";
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) { //uint8_t *
 
 
@@ -88,7 +89,7 @@ void setup() {
     //WiFi.disconnect();
     while(WiFiMulti.run() != WL_CONNECTED) {
       Serial.print(".");
-        delay(100);
+        delay(1000);
     }
     Serial.println("Connected to wi-fi");
     webSocket.begin(host, port, path);
@@ -104,7 +105,7 @@ void loop() {
     duration = pulseIn(echoPin, HIGH);
     distance = (duration/2) / 29.1;
     
-    if (distance <= 5 ){
+    if (distance <= sensor_distance_from_door ){
       //Serial.print(distance);
       currState = "open";
       //Serial.println(currState);
@@ -115,42 +116,64 @@ void loop() {
 
     
     webSocket.loop();
-    
+    delay(1000);
 }
+
 
 void processWebScoketRequest(String data){
 
-            JsonObject& root = jsonBuffer.parseObject(data);
-            //String device = (const char*)root["device"];
-            String instance = (const char*)root["instance"];
-            String state = (const char*)root["state"];
-            String query = (const char*)root["query"];
-            String message="";
+            JsonObject& req = jsonBuffer.parseObject(data);
+            String buff = req["request"]["intent"]["slots"];
+            JsonObject& slots = jsonBuffer.parseObject(buff);
 
+            String instance = (const char*)slots["instance"]["value"];
+            String state = (const char*)slots["state"]["value"];
+            String question = (const char*)slots["question"]["value"];
+            String message;
             Serial.println(data);
-            if(query == "cmd"){ //if command then execute
+            Serial.println(state);
+            
+            if(state == "open" || state == "close"){ //if query check state
               Serial.println("Recieved command!");
-                digitalWrite(relayPin, HIGH);
-                delay(2);
-                digitalWrite(relayPin, LOW);
-                   if(currState=="close"){
-                      message = "{\"state\":\"opening\"}";
-                    }else{
-                      message = "{\"state\":\"closing\"}";
+                   if(state != currState){
+                         if(currState == "close"){
+                            message = "opening";
+                          }else{
+                            message = "closing";
+                          }
+                          digitalWrite(relayPin, HIGH);
+                          delay(1000);
+                          digitalWrite(relayPin, LOW);
+                   }else{
+                          if(currState == "close"){
+                            message = "already closed";
+                          }else{
+                            message = "already open";
+                          }
                     }
-            }else if(query == "?"){    //if query return state
+                  digitalWrite(relayPin, HIGH);
+                  delay(5);
+                  digitalWrite(relayPin, LOW);
+                  jsonResponse.replace("<text>", "Garge door " + instance + " is " + message );
+
+            }else if(question == "is" || question == "what"){ //if command then execute
               Serial.println("Recieved query!");
                  if(currState=="open"){
-                      message = "{\"state\":\"open\"}";
+                      message = "open";
                     }else{
-                      message = "{\"state\":\"closed\"}";
+                      message = "closed";
                     }
+                   jsonResponse.replace("<text>", "Garge door " + instance + " is " + message );
             }else{//can not recognized the command
-              Serial.println("Command is not recognized!");
+                    Serial.println("Command is not recognized!");
+                   jsonResponse.replace("<text>", "Command is not recognized");
             }
             Serial.print("Sending response back");
-            Serial.println(message);
+            Serial.println(jsonResponse);
                   // send message to server
-                  webSocket.sendTXT(message);
-                  if(query == "cmd" || query == "?"){webSocket.sendTXT(message);}
+                  webSocket.sendTXT(jsonResponse);
+                  if(state == "open" || state == "close"){webSocket.sendTXT(jsonResponse);}
 }
+
+
+
