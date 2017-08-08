@@ -59,7 +59,6 @@ class HttpWSSProtocol(websockets.WebSocketServerProtocol):
             # {"instance": "1", "state": "open", "query":"?"}
             # {"instance": "both", "state": "close", "query":"cmd"}
 
-
             # # send command to ESP over websocket
             if self.rwebsocket== None:
                 print("Device is not connected!")
@@ -71,7 +70,7 @@ class HttpWSSProtocol(websockets.WebSocketServerProtocol):
             state = ESPparameters['instance'] + ' is ' + json.loads(self.rddata)['state']
 
             self.rddata = '{"version": "1.0","sessionAttributes": {},"response": {"outputSpeech": ' \
-                          '{"type": "Garage door ' + str(state) + '","text": "Garage door ' + str(state) + '"},"shouldEndSession": false}}'
+                           '{"type": "PlainText","text": "Garage door ' + str(state) + '"},"shouldEndSession": false}}'
 
             response = '\r\n'.join([
                 'HTTP/1.1 200 OK',
@@ -102,7 +101,7 @@ async def ws_handler(websocket, path):
 
 
 
-port = int(os.getenv('PORT', 5687))#5687
+port = int(os.getenv('PORT', 80))#5687
 start_server = websockets.serve(ws_handler, '', port, klass=HttpWSSProtocol)
 # logger.info('Listening on port %d', port)
 
