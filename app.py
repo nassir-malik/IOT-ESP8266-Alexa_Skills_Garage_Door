@@ -45,7 +45,7 @@ class HttpWSSProtocol(websockets.WebSocketServerProtocol):
             googleRequestJson = json.loads(googleRequest)
             ESPparameters = {}
             command = googleRequestJson['request']['intent']['slots']
-            if 'value' in command['question'].keys():
+            if 'value' in command['question'].keys() and None in command['question'].keys():
                     ESPparameters['query'] = '?'
             else:
                 ESPparameters['query'] = 'cmd'
