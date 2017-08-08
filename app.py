@@ -41,16 +41,11 @@ class HttpWSSProtocol(websockets.WebSocketServerProtocol):
         response = ''
         try:
 
-            googleRequest = self.reader._buffer.decode('utf-8')
-            googleRequestJson = json.loads(googleRequest)
-            await self.rwebsocket.send(json.dumps(googleRequestJson))
-            #await self.rwebsocket.send(json.dumps(ESPparameters))
+            AlexaRequest = self.reader._buffer.decode('utf-8')
+            await self.rwebsocket.send(AlexaRequest)
+
             #wait for response and send it back to Alexa as is
             self.rddata = await self.rwebsocket.recv()
-            #state = ESPparameters['instance'] + ' is ' + json.loads(self.rddata)['state']
-
-            # self.rddata = '{"version": "1.0","sessionAttributes": {},"response": {"outputSpeech": ' \
-            #                '{"type": "PlainText","text": "Garage door ' + str(state) + '"},"shouldEndSession": false}}'
 
             response = '\r\n'.join([
                 'HTTP/1.1 200 OK',
