@@ -71,7 +71,7 @@ class HttpWSSProtocol(websockets.WebSocketServerProtocol):
             state = ESPparameters['instance'] + ' is ' + json.loads(self.rddata)['state']
 
             self.rddata = '{"version": "1.0","sessionAttributes": {},"response": {"outputSpeech": ' \
-                          '{"type": "Garage door ' + state + '","text": "Garage door ' + state + '"},"shouldEndSession": false}}'
+                          '{"type": "Garage door ' + str(state) + '","text": "Garage door ' + str(state) + '"},"shouldEndSession": false}}'
 
             response = '\r\n'.join([
                 'HTTP/1.1 200 OK',
