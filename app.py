@@ -43,15 +43,35 @@ class HttpWSSProtocol(websockets.WebSocketServerProtocol):
 
             googleRequest = self.reader._buffer.decode('utf-8')
             googleRequestJson = json.loads(googleRequest)
+            ESPparameters = {}
+            command = googleRequestJson['request']['intent']['slots']
+            if 'value' in command['question'].keys():
+                    ESPparameters['query'] = '?'
+            else:
+                ESPparameters['query'] = 'cmd'
+
+            if 'open' in command['state']['value']:
+                ESPparameters['state'] = command['state']['value']
+            elif 'close' in command['state']['value']:
+                ESPparameters['state'] = command['state']['value']
+
+            ESPparameters['instance'] = command['instance']['value']
+            # {"instance": "1", "state": "open", "query":"?"}
+            # {"instance": "both", "state": "close", "query":"cmd"}
+
 
             # # send command to ESP over websocket
             if self.rwebsocket== None:
                 print("Device is not connected!")
                 return
-            await self.rwebsocket.send(json.dumps(googleRequestJson))
-
+            #await self.rwebsocket.send(json.dumps(googleRequestJson))
+            await self.rwebsocket.send(json.dumps(ESPparameters))
             #wait for response and send it back to Alexa as is
             self.rddata = await self.rwebsocket.recv()
+            state = ESPparameters['instance'] + ' is ' + json.loads(self.rddata)['state']
+
+            self.rddata = '{"version": "1.0","sessionAttributes": {},"response": {"outputSpeech": ' \
+                          '{"type": "Garage door ' + state + '","text": "Garage door ' + state + '"},"shouldEndSession": false}}'
 
             response = '\r\n'.join([
                 'HTTP/1.1 200 OK',
@@ -88,33 +108,3 @@ start_server = websockets.serve(ws_handler, '', port, klass=HttpWSSProtocol)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
-
-
-
-# '''{
-#               "version": "1.0",
-#               "sessionAttributes": {},
-#               "response":
-#               {
-#                 "outputSpeech":
-#                 {
-#                   "type": "PlainText",
-#                   "text": "Hello World, from the Alexa Demo"
-#                 },
-#                 "card":
-#                 {
-#                   "type": "Simple",
-#                   "title": "Alexa Demo",
-#                   "content": "This is the Alexa demo."
-#                 },
-#                 "reprompt":
-#                 {
-#                   "outputSpeech":
-#                   {
-#                     "type": "PlainText",
-#                     "text": "Can I help you with anything else?"
-#                   }
-#                 },
-#                 "shouldEndSession": false
-#               }
-#             }'''
