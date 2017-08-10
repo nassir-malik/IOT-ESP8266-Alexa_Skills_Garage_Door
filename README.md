@@ -16,7 +16,7 @@ In This project you will be able to control ESP8266 with Alexa skills without op
 
     ArduinoJson
 
-4. Update and flash your ESP8266 with "ESP8266/WebSocketClient/ESP8266_WebSocketClient/ESP8266_WebSocketClient.ino"
+4. Update and flash your ESP8266 with "ESP8266/ESP8266_WebSocketClient/ESP8266_WebSocketClient.ino"
 
 5. Create an Alexa skills and add Heroku app URL as an end-point
 
