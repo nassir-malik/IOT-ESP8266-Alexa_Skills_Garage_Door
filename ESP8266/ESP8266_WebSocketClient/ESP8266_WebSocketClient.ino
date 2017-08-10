@@ -20,12 +20,15 @@ int sensor_distance_from_door = 5; // enter the distance in inches between you u
 #define trigPin 5
 #define echoPin 4
 int duration, distance;
+const int relayPin1 = 16; //Garage door 1
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 int port = 80;
 char path[] = "/ws"; 
 ESP8266WiFiMulti WiFiMulti;
 WebSocketsClient webSocket;
-const int relayPin = 16;
+
 DynamicJsonBuffer jsonBuffer;
 String currState, oldState, message;
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) { 
@@ -88,7 +91,8 @@ void setup() {
     
     Serial.setDebugOutput(true);
     
-    pinMode(relayPin, OUTPUT);
+    pinMode(relayPin1, OUTPUT);
+
     
       for(uint8_t t = 4; t > 0; t--) {
           delay(1000);
@@ -126,6 +130,7 @@ void processWebScoketRequest(String data){
             String state = req["state"];
             String query = req["query"];
             String message = "{\"event\": \"OK\"}";
+            
             Serial.println("Data2-->"+data);
             Serial.println("State-->" + state);
 
@@ -147,10 +152,9 @@ void processWebScoketRequest(String data){
                           }else{
                             message = "closing";
                           }
-                          
-                          digitalWrite(relayPin, HIGH);
+                          digitalWrite(relayPin1, HIGH);
                           delay(1000);
-                          digitalWrite(relayPin, LOW);
+                          digitalWrite(relayPin1, LOW);
                    }else{
                           if(currState == "close"){
                             message = "already closed";
