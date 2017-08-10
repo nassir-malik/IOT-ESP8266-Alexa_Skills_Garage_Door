@@ -41,9 +41,31 @@ class HttpWSSProtocol(websockets.WebSocketServerProtocol):
         response = ''
         try:
 
-            AlexaRequest = self.reader._buffer.decode('utf-8')
-            await self.rwebsocket.send(AlexaRequest)
+            googleRequest = self.reader._buffer.decode('utf-8')
+            googleRequestJson = json.loads(googleRequest)
+            ESPparameters = {}
+            command = googleRequestJson['request']['intent']['slots']
+            if 'value' in command['question'].keys():
+                    ESPparameters['query'] = '?'
+            else:
+                ESPparameters['query'] = 'cmd'
 
+            if 'open' in command['state']['value']:
+                ESPparameters['state'] = command['state']['value']
+            elif 'close' in command['state']['value']:
+                ESPparameters['state'] = command['state']['value']
+
+            ESPparameters['instance'] = command['instance']['value']
+            # {"instance": "1", "state": "open", "query":"?"}
+            # {"instance": "both", "state": "close", "query":"cmd"}
+
+
+            # # send command to ESP over websocket
+            if self.rwebsocket== None:
+                print("Device is not connected!")
+                return
+            #await self.rwebsocket.send(json.dumps(googleRequestJson))
+            await self.rwebsocket.send(json.dumps(ESPparameters))
             #wait for response and send it back to Alexa as is
             self.rddata = await self.rwebsocket.recv()
 
@@ -76,7 +98,7 @@ async def ws_handler(websocket, path):
 
 
 
-port = int(os.getenv('PORT', 5687))#5687
+port = int(os.getenv('PORT', 80))#5687
 start_server = websockets.serve(ws_handler, '', port, klass=HttpWSSProtocol)
 # logger.info('Listening on port %d', port)
 
