@@ -21,7 +21,7 @@ int sensor_distance_from_door = 5; // enter the distance in inches between you u
 #define echoPin 4
 int duration, distance;
 const int relayPin1 = 16; //Garage door 1
-
+int pingCount = 0;
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 int port = 80;
@@ -118,7 +118,17 @@ void setup() {
 void loop() {
 
     webSocket.loop();
-    //delay(500);
+        delay(100);
+	// make sure after every 40 seconds send a ping to Heroku
+	//so it does not terminate the websocket connection
+	//This is to keep the conncetion alive between ESP and Heroku
+	if (pingCount > 20) {
+		pingCount = 0;
+		webSocket.sendTXT("\"heartbeat\":\"keepalive\"");
+	}
+	else {
+		pingCount += 1;
+	}
 }
 
 
